@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Human or Machine? – Code authorship test lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#070c1f;--p1:#0f1735;--p2:#151f46;--line:#27336a;--ink:#eaeeff;--mut:#8f9bc9;
+--hum:#ffb13b;--ai:#8b7bff;--good:#38e0a0;--bad:#ff6a78;--tot:#6fd6ff}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:radial-gradient(1200px 600px at 80% -10%,#1b2a74 0,transparent 60%),var(--bg);color:var(--ink);
+font:16px/1.55 "Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+.mono{font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+.wrap{max-width:1120px;margin:0 auto;padding:0 22px}
+/* hero */
+.hero{display:grid;grid-template-columns:1.15fr 1fr;gap:36px;align-items:center;padding:64px 0 36px}
+@media(max-width:860px){.hero{grid-template-columns:1fr;padding-top:36px}}
+h1{font-size:clamp(2.8rem,8vw,5.6rem);line-height:.92;margin:0 0 18px;font-weight:800;letter-spacing:-.045em}
+h1 .h{color:var(--hum)}h1 .a{color:var(--ai)}
+.hero p{color:var(--mut);font-size:1.12rem;max-width:46ch;margin:0}
+.scan{position:relative;background:var(--p1);border:1px solid var(--line);border-radius:14px;padding:22px 20px;overflow:hidden;
+box-shadow:0 30px 80px -30px #000,0 0 0 1px #ffffff08 inset}
+.scan i{display:block;height:9px;border-radius:5px;margin:12px 0;background:#2b3978}
+.scan i:nth-child(3n){background:#6a54d6aa}.scan i:nth-child(4n){background:#e0a13f99}
+.scan::after{content:"";position:absolute;left:0;right:0;height:90px;top:-90px;
+background:linear-gradient(180deg,transparent,#7fe3ff40 70%,#bff1ff);border-bottom:2px solid #bff1ff;animation:sweep 3.6s ease-in-out infinite}
+@keyframes sweep{to{top:100%}}
+/* lab */
+.lab{background:linear-gradient(180deg,var(--p1),#0b1230);border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:22px}
+.bar{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin-bottom:16px}
+.bar label.f{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--mut)}
+select,button,.btn{font:inherit;font-size:.92rem;color:var(--ink);background:var(--p2);border:1px solid var(--line);border-radius:9px;padding:9px 12px;cursor:pointer}
+select:focus-visible,button:focus-visible,#drop:focus-within{outline:2px solid var(--tot);outline-offset:2px}
+.spacer{flex:1}
+button.pri{background:linear-gradient(135deg,var(--ai),#5b8cff);border:0;font-weight:600}
+#drop{position:relative;display:block;border:2px dashed var(--line);border-radius:14px;padding:34px 16px;text-align:center;color:var(--mut);cursor:pointer;transition:.2s}
+#drop.over,#drop:hover{border-color:var(--tot);background:#7fe3ff0d;color:var(--ink)}
+#drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+#drop b{display:block;color:var(--ink);font-size:1.25rem;margin-bottom:2px}
+#st{margin:12px 0 0;font-size:.82rem;color:var(--mut)}#st.err{color:var(--bad)}
+.panel{display:none;grid-template-columns:1.2fr 1fr;gap:18px;margin-top:20px}
+@media(max-width:860px){.panel{grid-template-columns:1fr}}
+.card{background:var(--p1);border:1px solid var(--line);border-radius:14px;padding:18px}
+.card h2{margin:0 0 14px;font-size:1.05rem;font-weight:800;letter-spacing:-.01em}
+/* chart */
+.chart{display:flex;align-items:flex-end;gap:5%;height:230px;padding:0 4%;border-bottom:1px solid var(--line);position:relative;
+background:repeating-linear-gradient(to top,transparent 0 56px,#27336a66 56px 57px)}
+.col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
+.col .v{font-size:.95rem;font-weight:700;margin-bottom:4px}
+.col .b{width:100%;max-width:90px;height:0;border-radius:8px 8px 0 0;transition:height .9s cubic-bezier(.2,.9,.2,1)}
+.lbls{display:flex;gap:5%;padding:8px 4% 0;text-align:center;font-size:.82rem;color:var(--mut)}
+.lbls div{flex:1}.lbls small{display:block;color:var(--ink)}
+/* table */
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th,td{padding:8px 6px;text-align:right;border-bottom:1px solid var(--line)}
+th{color:var(--mut);font-weight:500}th:first-child,td:first-child{text-align:left}
+/* items */
+.items{display:grid;gap:10px;margin-top:6px}
+.it{display:grid;grid-template-columns:64px 1fr auto;gap:14px;align-items:center;background:var(--p1);border:1px solid var(--line);border-radius:12px;padding:10px 14px 10px 10px}
+@media(max-width:700px){.it{grid-template-columns:56px 1fr}.it .chips{grid-column:1/-1}}
+.it img{width:64px;height:64px;object-fit:cover;border-radius:8px;background:var(--p2)}
+.nm{font-size:.9rem;word-break:break-all}
+.meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:6px;font-size:.8rem}
+.pill{padding:2px 9px;border-radius:99px;font-weight:600;font-size:.78rem;color:#0b1020}
+.meta select{padding:3px 8px;font-size:.8rem}
+.chips{display:flex;gap:6px}
+.chip{min-width:46px;text-align:center;padding:5px 6px;border-radius:8px;border:1px solid var(--line);color:#5d6aa0;font-size:.78rem}
+.chip b{display:block;font-size:1rem}
+.chip.on.g{background:#38e0a022;border-color:var(--good);color:var(--good)}
+.chip.on.r{background:#ff6a7822;border-color:var(--bad);color:var(--bad)}
+.hd{display:flex;justify-content:space-between;align-items:baseline;margin:26px 0 8px}
+.hd h2{margin:0;font-size:1.3rem}.hd span{color:var(--mut);font-size:.82rem}
+footer{color:var(--mut);font-size:.8rem;padding:6px 0 44px}
+@media(prefers-reduced-motion:reduce){.scan::after{animation:none;top:40%}.col .b{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <div>
+      <h1><span class="h">Human</span> or <span class="a">machine?</span></h1>
+      <p>Drop in screenshots of code and a trained model decides who wrote each one. Add the true authors to see accuracy, TP, TN, FP and FN for every image.</p>
+    </div>
+    <div class="scan" aria-hidden="true"><i style="width:55%"></i><i style="width:80%"></i><i style="width:35%"></i><i style="width:68%"></i><i style="width:48%"></i><i style="width:88%"></i><i style="width:60%"></i><i style="width:30%"></i><i style="width:74%"></i><i style="width:52%"></i></div>
+  </section>
+
+  <section class="lab" aria-label="Test lab">
+    <div class="bar">
+      <label class="f">New images are labeled as<select id="defLab"></select></label>
+      <label class="f">Positive class for TP/TN/FP/FN<select id="posSel"></select></label>
+      <span class="spacer"></span>
+      <button id="csv" type="button">Export CSV</button>
+      <button id="clr" type="button">Clear all</button>
+    </div>
+    <label id="drop">
+      <input type="file" id="file" accept="image/*" multiple aria-label="Choose code screenshots">
+      <b>Drop code screenshots here</b>
+      Select many at once, or paste from your clipboard. If a file name contains “human” or “ai”, it’s labeled automatically.
+    </label>
+    <p id="st">Loading model…</p>
+
+    <div class="panel" id="panel">
+      <div class="card">
+        <h2>Accuracy by category</h2>
+        <div class="chart" id="chart"></div>
+        <div class="lbls" id="lbls"></div>
+      </div>
+      <div class="card">
+        <h2>Confusion counts</h2>
+        <table><thead><tr><th>Class</th><th>TP</th><th>TN</th><th>FP</th><th>FN</th><th>Acc.</th></tr></thead><tbody id="tb"></tbody></table>
+        <p class="mono" id="tot" style="margin:14px 0 0;color:var(--mut);font-size:.82rem"></p>
+      </div>
+    </div>
+  </section>
+
+  <div class="hd" id="hd" style="display:none"><h2>Results per image</h2><span id="posNote"></span></div>
+  <div class="items" id="items"></div>
+  <footer>Everything runs in your browser; images are never uploaded. Results are estimates from a small model, not proof of authorship.</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8.5/dist/teachablemachine-image.min.js"></script>
+<script>
+const URL_M="https://teachablemachine.withgoogle.com/models/O4egSTDBP/";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let model,labels=[],items=[],uid=0;
+const UNK="Unknown";
+const isAI=n=>/(^|[^a-z])(ai|gpt|chatgpt|bot|machine|llm|generated)([^a-z]|$)/i.test(n);
+const col=n=>isAI(n)?"var(--ai)":"var(--hum)";
+const st=(t,e)=>{$("st").textContent=t;$("st").className=e?"err":""};
+
+const ready=(async()=>{
+  try{
+    model=await tmImage.load(URL_M+"model.json",URL_M+"metadata.json");
+    labels=model.getClassLabels();
+    const opts=l=>l.map(x=>`<option>${esc(x)}</option>`).join("");
+    $("defLab").innerHTML=opts([UNK,...labels]);
+    $("posSel").innerHTML=opts(labels);
+    const ai=labels.find(isAI); if(ai)$("posSel").value=ai;
+    st("Model ready. Add some images.");
+  }catch(e){st("Could not load the model. Check your connection and that the model is shared publicly.",true)}
+})();
+
+function guess(name){
+  const n=name.toLowerCase();
+  for(const l of labels){const k=l.toLowerCase();
+    if(isAI(l)?/(^|[^a-z])(ai|gpt|chatgpt|bot|llm)([^a-z]|$)/.test(n):n.includes(k)||(/human/.test(k)&&/human/.test(n)))return l;}
+  return $("defLab").value;
+}
+
+async function add(files){
+  const list=[...files].filter(f=>f.type.startsWith("image/")||/\.(png|jpe?g|webp|gif|bmp)$/i.test(f.name));
+  await ready; if(!model)return;
+  if(!list.length){st("Please choose image files (PNG, JPG or WEBP).",true);return}
+  let k=0;
+  for(const f of list){
+    st(`Analyzing ${++k} of ${list.length}…`);
+    const url=URL.createObjectURL(f),img=new Image();
+    await new Promise(r=>{img.onload=r;img.onerror=r;img.src=url});
+    try{
+      const pr=await model.predict(img);
+      pr.sort((a,b)=>b.probability-a.probability);
+      items.push({id:++uid,url,name:f.name||"pasted-image.png",pred:pr[0].className,conf:pr[0].probability,truth:guess(f.name||"")});
+    }catch(e){st("Could not analyze “"+f.name+"”.",true)}
+  }
+  st(`${items.length} image${items.length>1?"s":""} analyzed.`);
+  render();
+}
+
+function outcome(it,P){
+  if(it.truth===UNK)return null;
+  const t=it.truth===P,p=it.pred===P;
+  return t&&p?"TP":!t&&!p?"TN":!t&&p?"FP":"FN";
+}
+
+function render(){
+  const P=$("posSel").value,lab=items.filter(i=>i.truth!==UNK);
+  $("hd").style.display=items.length?"flex":"none";
+  $("posNote").textContent="Positive class: "+P;
+  $("items").innerHTML=items.map(it=>{
+    const o=outcome(it,P),sel=[UNK,...labels].map(l=>`<option${l===it.truth?" selected":""}>${esc(l)}</option>`).join("");
+    const chips=["TP","TN","FP","FN"].map(c=>`<div class="chip mono ${o===c?"on "+(c[0]===c[1]?"g":"r"):""}"><b>${o===c?1:0}</b>${c}</div>`).join("");
+    return `<div class="it" data-id="${it.id}"><img src="${it.url}" alt=""><div><div class="nm">${esc(it.name)}</div>
+    <div class="meta"><span class="pill" style="background:${col(it.pred)}">${esc(it.pred)} ${(it.conf*100).toFixed(0)}%</span>
+    <label>True author: <select class="tr">${sel}</select></label>${o?"":'<span style="color:var(--mut)">Set the true author to score this image</span>'}</div></div><div class="chips">${chips}</div></div>`}).join("");
+  $("panel").style.display=lab.length?"grid":"none";
+  if(!lab.length)return;
+  let rows="",bars=[],right=0;
+  for(const c of labels){
+    let TP=0,TN=0,FP=0,FN=0;
+    lab.forEach(i=>{const o=outcome(i,c);o==="TP"?TP++:o==="TN"?TN++:o==="FP"?FP++:FN++});
+    const n=TP+FN,acc=n?TP/n:null;right+=TP;
+    rows+=`<tr><td style="color:${col(c)}">${esc(c)}</td><td>${TP}</td><td>${TN}</td><td>${FP}</td><td>${FN}</td><td>${acc===null?"–":(acc*100).toFixed(0)+"%"}</td></tr>`;
+    bars.push({n:c,v:acc,sub:`${TP}/${n} correct`,c:col(c)});
+  }
+  const tot=right/lab.length;
+  bars.push({n:"Total",v:tot,sub:`${right}/${lab.length} correct`,c:"var(--tot)"});
+  $("tb").innerHTML=rows;
+  $("tot").textContent=`Total accuracy ${(tot*100).toFixed(1)}% · ${lab.length} labeled of ${items.length} images`;
+  $("chart").innerHTML=bars.map(b=>`<div class="col"><div class="v mono">${b.v===null?"–":(b.v*100).toFixed(0)+"%"}</div><div class="b" data-h="${(b.v||0)*100}" style="background:${b.c}"></div></div>`).join("");
+  $("lbls").innerHTML=bars.map(b=>`<div>${esc(b.n)}<small class="mono">${b.sub}</small></div>`).join("");
+  requestAnimationFrame(()=>document.querySelectorAll("#chart .b").forEach(e=>e.style.height=e.dataset.h*0.8+"%"));
+}
+
+$("items").addEventListener("change",e=>{
+  if(!e.target.classList.contains("tr"))return;
+  const it=items.find(i=>i.id==e.target.closest(".it").dataset.id);it.truth=e.target.value;render();
+});
+$("posSel").addEventListener("change",render);
+$("file").addEventListener("change",e=>{add(e.target.files);e.target.value=""});
+$("clr").addEventListener("click",()=>{items=[];render();$("panel").style.display="none";st("Cleared.")});
+$("csv").addEventListener("click",()=>{
+  const P=$("posSel").value;
+  const r=[["file","true_author","predicted","confidence","outcome_for_"+P],...items.map(i=>[i.name,i.truth,i.pred,i.conf.toFixed(4),outcome(i,P)||""])];
+  const a=document.createElement("a");a.download="results.csv";
+  a.href=URL.createObjectURL(new Blob([r.map(x=>x.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n")],{type:"text/csv"}));a.click();
+});
+const d=$("drop");
+["dragenter","dragover"].forEach(t=>d.addEventListener(t,e=>{e.preventDefault();d.classList.add("over")}));
+["dragleave","drop"].forEach(t=>d.addEventListener(t,e=>{e.preventDefault();d.classList.remove("over")}));
+d.addEventListener("drop",e=>add(e.dataTransfer.files));
+document.addEventListener("paste",e=>{const f=[...(e.clipboardData?.files||[])];if(f.length)add(f)});
+</script>
+</body>
+</html>
